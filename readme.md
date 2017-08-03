@@ -1,3 +1,6 @@
+make sure build caffe with cmake (make all & make install)
+please change CMakeList.txt path in this project 
+
 ---
 title: CaffeNet C++ Classification example
 description: A simple example performing image classification using the low-level C++ API.
