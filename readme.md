@@ -7,8 +7,8 @@ priority: 10
 ---
 
 ---
-make sure build caffe with cmake (make all & make install)
-please change CMakeList.txt path in this project 
+# make sure build caffe with cmake (make all & make install) 
+# please change CMakeList.txt path in this project 
 ---
 
 # Classifying ImageNet: using the C++ API
