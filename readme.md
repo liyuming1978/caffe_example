@@ -6,6 +6,11 @@ include_in_docs: true
 priority: 10
 ---
 
+---
+# make sure build caffe with cmake (make all & make install) 
+# please change CMakeList.txt path in this project 
+---
+
 # Classifying ImageNet: using the C++ API
 
 Caffe, at its core, is written in C++. It is possible to use the C++
