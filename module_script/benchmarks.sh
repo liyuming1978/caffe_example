@@ -1,10 +1,10 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )"
-ROOT=$DIR/..
+ROOT=$DIR/
 BatchSizes=( 1 2 4 8 16 32 64 128 )
 TimeStamp=$(date +"%Y%m%d%H%M")
-ModelDir=$ROOT/models/Baidu
-BenchDir=$ROOT/models/Baidu/${TimeStamp}
+ModelDir=$ROOT
+BenchDir=$ROOT/${TimeStamp}
 
 Protos=( AlexNet-merged VGG16-merged ResNet101-merged GoogleNetV2-merged GoogleNetV1-merged )
 #Protos=( AlexNet-merged VGG16-merged ResNet101-merged GoogleNetV2-merged GoogleNetV1-merged )
