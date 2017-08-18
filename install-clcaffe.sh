@@ -11,7 +11,9 @@ sudo pip install numpy -i https://pypi.tuna.tsinghua.edu.cn/simple
 sudo pip install scikit-image -i https://pypi.tuna.tsinghua.edu.cn/simple
 sudo pip install protobuf -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-rm -rf $HOME/code
+rm -rf $HOME/code/caffe
+rm -rf $HOME/code/viennacl-dev
+rm -rf $HOME/code/isaac
 ###intall viennacl-dev########################
 mkdir -p $HOME/code
 cd $HOME/code
@@ -42,4 +44,5 @@ cmake .. -DUSE_GREENTEA=ON -DUSE_CUDA=OFF -DUSE_INTEL_SPATIAL=ON -DBUILD_docs=0 
 make all -j4
 make install
 
+echo "" >> $HOME/.bashrc
 echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/viennacl/" >> $HOME/.bashrc
