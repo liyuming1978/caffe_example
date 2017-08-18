@@ -41,3 +41,5 @@ cmake .. -DUSE_GREENTEA=ON -DUSE_CUDA=OFF -DUSE_INTEL_SPATIAL=ON -DBUILD_docs=0 
 
 make all -j4
 make install
+
+echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/viennacl/" >> $HOME/.bashrc
