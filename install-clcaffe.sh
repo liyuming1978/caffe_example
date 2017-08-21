@@ -45,9 +45,15 @@ cmake .. -DUSE_GREENTEA=ON -DUSE_CUDA=OFF -DUSE_INTEL_SPATIAL=ON -DBUILD_docs=0 
 make all -j4
 make install
 
-echo "" >> $HOME/.bashrc
-echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/viennacl/" >> $HOME/.bashrc
+####add env############################
+grep -q "export VIENNACL_CACHE_PATH"  $HOME/.bashrc
+if  [ $?  -ne  0 ] 
+then # if not exist
+	echo "" >> $HOME/.bashrc
+	echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/viennacl/" >> $HOME/.bashrc
+fi
 
+####install clpeak############################
 cd $HOME/code
 git clone https://github.com/krrishnarraj/clpeak.git
 cd clpeak
