@@ -5,6 +5,7 @@ sudo apt-get install -y --no-install-recommends libboost-all-dev
 sudo apt-get install -y libgflags-dev libgoogle-glog-dev liblmdb-dev
 sudo apt-get install -y libstdc++6  libatlas-base-dev git cmake vim
 sudo apt-get install -y python-pip python-dev build-essential 
+sudo apt-get install -y ocl-icd-opencl-dev opencl-headers ocl-icd-libopencl1
 sudo pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple
 sudo pip install --upgrade virtualenv -i https://pypi.tuna.tsinghua.edu.cn/simple
 sudo pip install numpy -i https://pypi.tuna.tsinghua.edu.cn/simple
@@ -47,10 +48,10 @@ make install
 echo "" >> $HOME/.bashrc
 echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/viennacl/" >> $HOME/.bashrc
 
-sudo apt-get install clinfo ocl-icd-opencl-dev opencl-headers ocl-icd-libopencl1
 cd $HOME/code
 git clone https://github.com/krrishnarraj/clpeak.git
 cd clpeak
 mkdir build && cd build
+cmake ..
 make -j4
-./clpeak
+./build/clpeak
