@@ -46,3 +46,11 @@ make install
 
 echo "" >> $HOME/.bashrc
 echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/viennacl/" >> $HOME/.bashrc
+
+sudo apt-get install clinfo ocl-icd-opencl-dev opencl-headers ocl-icd-libopencl1
+cd $HOME/code
+git clone https://github.com/krrishnarraj/clpeak.git
+cd clpeak
+mkdir build && cd build
+make -j4
+./clpeak
