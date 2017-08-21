@@ -1,17 +1,13 @@
----
-title: CaffeNet C++ Classification example
-description: A simple example performing image classification using the low-level C++ API.
-category: example
-include_in_docs: true
-priority: 10
----
 
----
-# make sure build caffe with cmake (make all & make install) 
-# please change CMakeList.txt path in this project 
----
+# Three parts: (installing scripts, fused models, doc & example project)
 
-# Classifying ImageNet: using the C++ API
+## (I): install-opencldriver4.1.sh & install-clcaffe.sh
+
+## (II): module_script includes some popular models
+
+## (III): doc(clcaffe_install_use.docx -- Chinese) 
+##        example project (fp16 & fp32)
+##        how to build the project , just cmake , but you must firstly do as below
 
 Caffe, at its core, is written in C++. It is possible to use the C++
 API of Caffe to implement an image classification application similar
