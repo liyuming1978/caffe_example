@@ -50,7 +50,7 @@ grep -q "export VIENNACL_CACHE_PATH"  $HOME/.bashrc
 if  [ $?  -ne  0 ] 
 then # if not exist
 	echo "" >> $HOME/.bashrc
-	echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/viennacl/" >> $HOME/.bashrc
+	echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/clcaffe_cache/viennacl/" >> $HOME/.bashrc
 fi
 
 ####install clpeak############################
