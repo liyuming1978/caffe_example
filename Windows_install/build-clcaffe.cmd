@@ -88,9 +88,11 @@ if not exist "%~sdp0\caffe\build\install\" (
 	xcopy %~sdp0\caffe\include\3rdparty %~sdp0\caffe\build\install\include\3rdparty /s /h /c /y 
 
 	:: install python
-	%py_path_str%\..\..\Scripts\pip install protobuf -i https://pypi.tuna.tsinghua.edu.cn/simple
+	cd %py_path_str%\..\..\Scripts
+	pip install protobuf -i https://pypi.tuna.tsinghua.edu.cn/simple
 	echo ###############################################
 	echo copy caffe\build\install\python\caffe to  %py_path_str%\caffe
-	mkdir %py_path_str%\caffe
-	xcopy .\caffe\build\install\python\caffe %py_path_str%\caffe /s /h /c /y 
+	cd %py_path_str%
+	mkdir caffe
+	xcopy %~sdp0\caffe\build\install\python\caffe .\caffe /s /h /c /y 
 )
