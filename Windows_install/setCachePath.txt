@@ -1,0 +1,4 @@
+please set "VIENNACL_CACHE_PATH" in Environment Variables(系统环境变量)
+generally  c:\clcaffe_cache\viennacl
+note!!!  the cache will be generated in both "clcaffe_cache" and "viennacl" dir
+so , if you just set as c:\clcaffe_cache, so files will be generated in c:\ root!
