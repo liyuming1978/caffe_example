@@ -4,6 +4,8 @@ import cv2
 import time
 import os
 import numpy as np
+import sys
+
 print(cv2.__version__)
 
 caffe_root = '/home/lym/work/code/caffe/'            #you must change it here!!!!!!!!!!!!
