@@ -1,6 +1,6 @@
 #include <caffe/caffe.hpp>
 #ifdef USE_OPENCV
-#include "opencv2/core/ocl.hpp"
+#include <opencv2/core/ocl.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -17,18 +17,18 @@
 #include <queue>
 #include <semaphore.h>
 #include <glog/logging.h>
-
+#include "kernels.hpp"
 
 #if defined(USE_OPENCV) && defined(HAS_HALF_SUPPORT)
 using namespace caffe;  // NOLINT(build/namespaces)
 using caffe::Timer;
 using std::queue;  
 
-#define Dtype half
+#define Dtype float
 
 class Detector {
 public:
-	typedef struct __detect_result {
+	typedef struct __resultbox {
 		int imgid;
 		float classid;
 		float confidence;
@@ -36,17 +36,24 @@ public:
 		float right;
 		float top;
 		float bottom;
-	}detect_result;
+	}resultbox;
+	
+	typedef struct __Result {
+		vector<resultbox> boxs;
+		cv::Mat orgimg;
+		cv::Size imgsize;
+	}Result;
 	
 	Detector(const string& model_file,
-		const string& weights_file,int min_batch);
+		const string& weights_file,int min_batch,bool keep_orgimg);
 	~Detector();
 
-	bool Detect(vector<vector<Detector::detect_result> >& objects);
+	bool Detect(vector<Result>& objects);
 	inline int GetCurBatch(){return  num_batch_;}
 	bool InsertImage(const cv::Mat& orgimg);
 	void SetBatch(int batch);
-	bool TryDetect();
+	int TryDetect();
+	void PreprocessGPU(float* imgdata);
 
 private:
 	void WrapInputLayer(Blob<Dtype>* pdata);
@@ -54,17 +61,25 @@ private:
 	void CreateMean();
 	void EmptyQueue(queue<Blob<Dtype>*>& que);
 	void EmptyQueue(queue<cv::Size>& que);
+	void EmptyQueue(queue<cv::Mat>& que);
 	shared_ptr<Net<Dtype> > net_;
 	std::vector<Dtype *> input_channels;
 	cv::Size input_geometry_;
 	queue<Blob<Dtype>*> batchque_;
 	queue<cv::Size> imgsizeque_;
+	queue<cv::Mat> imgque_;
 	pthread_mutex_t mutex ; 
 	int nbatch_index_;
 	int num_channels_;
 	int min_batch_;
 	int num_batch_;
 	cv::Mat mean_;
+	int gpuid_;
+	bool keep_orgimg_;
+	int max_imgqueue_;
+	int curdata_batch_;
+	viennacl::ocl::program fp16_ocl_program_;
+	Blob<Dtype>* pbatch_element_;
 };
 
 // Get all available GPU devices
@@ -81,12 +96,12 @@ static void get_gpus(vector<int>* gpus) {
 }
 
 Detector::Detector(const string& model_file,
-	const string& weights_file,int min_batch) {
+	const string& weights_file,int min_batch,bool keep_orgimg) {
 	// Set device id and mode
 	vector<int> gpus;
 	get_gpus(&gpus);
 	Caffe::SetDevices(gpus);
-	bool bGpumode = false;
+	gpuid_ = -1;
 	if (gpus.size() != 0) {
 #ifndef CPU_ONLY
 		for (int i = 0; i < gpus.size(); i++) {
@@ -96,7 +111,8 @@ Detector::Detector(const string& model_file,
 					//&& Caffe::GetDevice(gpus[i], true)->CheckCapability("cl_intel_subgroups")) {
 						Caffe::set_mode(Caffe::GPU);
 						Caffe::SetDevice(gpus[i]);
-						bGpumode = true;
+						gpuid_ = gpus[i];
+						//fp16_ocl_program_ = RegisterKernels<Dtype>(&(viennacl::ocl::get_context(static_cast<uint64_t>(gpuid_))));
 						LOG(INFO) << "Use GPU=" << gpus[i];
 						break;
 				}
@@ -104,13 +120,14 @@ Detector::Detector(const string& model_file,
 		}
 #endif  // !CPU_ONLY
 	}
-	if(!bGpumode){
-		LOG(INFO) << "Use CPU!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+	if(gpuid_<0){
+		LOG(FATAL) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!Use CPU!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
 		Caffe::set_mode(Caffe::CPU);
 	}
 	
 	pthread_mutex_init(&mutex,NULL); 
 	min_batch_=min_batch;
+	keep_orgimg_ = keep_orgimg;
 	/* Load the network. */
 	net_.reset(new Net<Dtype>(model_file, TEST, Caffe::GetDefaultDevice()));
 	net_->CopyTrainedLayersFrom(weights_file);
@@ -123,12 +140,14 @@ Detector::Detector(const string& model_file,
 	SetBatch(min_batch_);
 	CreateMean();
 	nbatch_index_ = 0;
+	net_->Forward(); //just warm up
 }
 
 Detector::~Detector() {
 	pthread_mutex_destroy(&mutex);  
 	EmptyQueue(batchque_);
 	EmptyQueue(imgsizeque_);
+	EmptyQueue(imgque_);
 }
 
 void Detector::EmptyQueue(queue<Blob<Dtype>*>& que)
@@ -147,6 +166,13 @@ void Detector::EmptyQueue(queue<cv::Size>& que)
 	}
 }
 
+void Detector::EmptyQueue(queue<cv::Mat>& que)
+{
+	while(!que.empty()){
+		que.pop();
+	}
+}
+
 //note! do not call it if Detect not finished
 void Detector::SetBatch(int batch)
 {
@@ -154,21 +180,23 @@ void Detector::SetBatch(int batch)
 		return;
 	Blob<Dtype>* input_layer = net_->input_blobs()[0];
 	num_batch_=batch;
+	max_imgqueue_=num_batch_*2;
 	LOG(INFO) << "Change Batch to " << num_batch_ ;
 	input_layer->Reshape(num_batch_, num_channels_,input_geometry_.height, input_geometry_.width);
 	/* Forward dimension change to all layers. */
 	net_->Reshape();
 }
 
-bool Detector::TryDetect() {
-	bool hasdata;
+int Detector::TryDetect() {
+	int curbatch=0;
 	pthread_mutex_lock(&mutex); 
-	hasdata = !batchque_.empty();
+	if(!batchque_.empty())
+		curbatch=batchque_.front()->num();
 	pthread_mutex_unlock(&mutex); 	
-	return hasdata;
+	return curbatch;
 }
 
-bool Detector::Detect(vector<vector<Detector::detect_result> >& objects) {
+bool Detector::Detect(vector<Detector::Result>& objects) {
 	Blob<Dtype>* pdata;
 	pthread_mutex_lock(&mutex); 
 	if(!batchque_.empty()){
@@ -179,31 +207,33 @@ bool Detector::Detect(vector<vector<Detector::detect_result> >& objects) {
 		pthread_mutex_unlock(&mutex); 	
 		return false;
 	}
-	pthread_mutex_unlock(&mutex); 	
-	net_->input_blobs()[0]->ShareData(*pdata);
-	
-	vector<cv::Size> vimgsize;
-	pthread_mutex_lock(&mutex); 
+
 	for (int i=0;i<pdata->num();i++) {
 		if(!imgsizeque_.empty()){
-			vimgsize.push_back(imgsizeque_.front());
+			objects[i].imgsize = imgsizeque_.front();
 			imgsizeque_.pop();
 		}
 		else
-			vimgsize.push_back(cv::Size(0,0));
+			objects[i].imgsize = cv::Size(0,0);
+		
+		if(keep_orgimg_ && !imgque_.empty()){
+			objects[i].orgimg = imgque_.front();
+			imgque_.pop();
+		}
 	}
 	pthread_mutex_unlock(&mutex); 
 	
+	net_->input_blobs()[0]->ShareData(*pdata);
 	net_->Forward();
 	/* get the result */
 	Blob<Dtype>* result_blob = net_->output_blobs()[0];
 	const Dtype* result = result_blob->cpu_data();
 	const int num_det = result_blob->height();
 	for (int k = 0; k < num_det * 7; k += 7) {
-		detect_result object;
+		resultbox object;
 		object.imgid = (int)result[k + 0];
-		int w=vimgsize[object.imgid].width;
-		int h=vimgsize[object.imgid].height;		
+		int w=objects[object.imgid].imgsize.width;
+		int h=objects[object.imgid].imgsize.height;		
 		object.classid = (int)result[k + 1];
 		object.confidence = result[k + 2];
 		object.left = (int)(result[k + 3] * w);
@@ -214,7 +244,7 @@ bool Detector::Detect(vector<vector<Detector::detect_result> >& objects) {
 		if (object.top < 0) object.top = 0;
 		if (object.right >= w) object.right = w - 1;
 		if (object.bottom >= h) object.bottom = h - 1;
-		objects[result[k + 0]].push_back(object);
+		objects[object.imgid].boxs.push_back(object);
 	}
 	delete pdata;
 	return true;
@@ -264,7 +294,7 @@ cv::Mat Detector::PreProcess(const cv::Mat& img) {
 		sample_resized.convertTo(sample_float, CV_32FC3);
 	else
 		sample_resized.convertTo(sample_float, CV_32FC1);
-
+	
 	cv::scaleAdd (sample_float, 0.007843, mean_, sample_float_sub_scale); //scaleAdd or (add+multiply)? which speed : ans is scaleAdd
 	//cv::add(sample_float, -127.5, sample_float_sub);
 	//cv::multiply(sample_float_sub, 0.007843, sample_float_sub_scale);
@@ -279,47 +309,89 @@ void Detector::CreateMean() {
 		mean_= cv::Mat(input_geometry_, CV_32FC1, cv::Scalar(-127.5*0.007843));	
 }
 
+void Detector::PreprocessGPU(float* imgdata)
+{
+	int n=input_geometry_.height*input_geometry_.width*num_channels_;
+	float scale = 0.007843;
+	float mean = -127.5;
+	float* in_data;
+	Dtype* out_data=pbatch_element_->mutable_gpu_data()+nbatch_index_*n;
+	
+	Blob<float> in_blob;
+	in_blob.Reshape(1, num_channels_,input_geometry_.height, input_geometry_.width);
+	in_blob.set_cpu_data(imgdata);
+	in_blob.data().get()->async_gpu_push();
+	in_data = in_blob.mutable_gpu_data();
+	
+	viennacl::ocl::context &ctx = viennacl::ocl::get_context(gpuid_);
+	// Execute kernel
+	viennacl::ocl::kernel &oclk_preprocess = fp16_ocl_program_.get_kernel(
+		CL_KERNEL_SELECT("preprocess"));
+	viennacl::ocl::enqueue(
+		oclk_preprocess(n, scale, mean, WrapHandle((cl_mem)in_data, &ctx),
+		WrapHandle((cl_mem)out_data, &ctx)),
+		ctx.get_queue());
+}
+
 /*
 	InsertImage will fill a blob until blob full, if full return the blob point
 */
 bool Detector::InsertImage(const cv::Mat& orgimg) {
 	bool retvalue=false;
+
+	pthread_mutex_lock(&mutex); 
+	if(imgsizeque_.size()>=max_imgqueue_){
+		pthread_mutex_unlock(&mutex); 	
+		return false;
+	}
+	pthread_mutex_unlock(&mutex); 		
 	
-	cv::Mat img = PreProcess(orgimg);
+	cv::Mat img = PreProcess(orgimg);	
 	
 	if(nbatch_index_==0){  //new a blob
-		Blob<Dtype>* pbatch_element_=new Blob<Dtype>();
+		pbatch_element_=new Blob<Dtype>();
 		pbatch_element_->Reshape(num_batch_, num_channels_,input_geometry_.height, input_geometry_.width);		
+		curdata_batch_ = num_batch_;
 		WrapInputLayer(pbatch_element_);
 		pthread_mutex_lock(&mutex); 
 		batchque_.push(pbatch_element_);
 		pthread_mutex_unlock(&mutex); 
 	}
+	
 	pthread_mutex_lock(&mutex); 
 	imgsizeque_.push(orgimg.size());
+	if(keep_orgimg_)
+		imgque_.push(orgimg);
 	pthread_mutex_unlock(&mutex); 	
 	
 	/* Convert the input image to the input image format of the network. */
-	int indexB=0+nbatch_index_*num_channels_;
-	int indexG=1+nbatch_index_*num_channels_;
-	int indexR=2+nbatch_index_*num_channels_;
-	for (int i = 0; i < input_geometry_.height; i++) {
-		for (int j = 0; j < input_geometry_.width; j++) {
-			int pos = i * input_geometry_.width + j;
-			if (num_channels_ == 3) {
-				cv::Vec3f pixel = img.at<cv::Vec3f>(i, j);
-				input_channels[indexB][pos] = pixel.val[2];
-				input_channels[indexG][pos] = pixel.val[1];
-				input_channels[indexR][pos] = pixel.val[0];  //RGB2BGR
-			}
-			else {
-				cv::Scalar pixel = img.at<float>(i, j);
-				input_channels[indexB][pos] = pixel.val[0];
+	if(true){
+		int indexB=0+nbatch_index_*num_channels_;
+		int indexG=1+nbatch_index_*num_channels_;
+		int indexR=2+nbatch_index_*num_channels_;
+		for (int i = 0; i < input_geometry_.height; i++) {
+			for (int j = 0; j < input_geometry_.width; j++) {
+				int pos = i * input_geometry_.width + j;
+				if (num_channels_ == 3) {
+					cv::Vec3f pixel = img.at<cv::Vec3f>(i, j);
+					input_channels[indexB][pos] = pixel.val[2];
+					input_channels[indexG][pos] = pixel.val[1];
+					input_channels[indexR][pos] = pixel.val[0];  //RGB2BGR
+				}
+				else {
+					cv::Scalar pixel = img.at<float>(i, j);
+					input_channels[indexB][pos] = pixel.val[0];
+				}
 			}
 		}
 	}
+	else{
+		CHECK(img.isContinuous())
+			<< "Model size must 4X, if not, cv::Mat will not Continuous";
+		PreprocessGPU((float*)img.data);
+	}
 	//if full return pbatch_element_
-	if(++nbatch_index_>=num_batch_){
+	if(++nbatch_index_>=curdata_batch_){
 		nbatch_index_=0;
 		retvalue = true;	
 	}
@@ -329,13 +401,8 @@ bool Detector::InsertImage(const cv::Mat& orgimg) {
 //--------------------------------------------------------------------
 #define CAMNUM	6
 const int FIXED_BATCH=CAMNUM;  //you can set higher than CAMNUM
-const int MAXQUEUE=(FIXED_BATCH*2);  //must larger or equal to FIXED_BATCH*2
-
 bool grunning=false;
-queue<cv::Mat> gpicque; //if you donot need show, just del all gpicque
-queue<int> gpicindexque;
 Detector* gpdetector;
-pthread_mutex_t mutex ; 
 sem_t g_semt;
 int total_frame;
 
@@ -365,71 +432,44 @@ void safewait()
 
 void *thr_camera(void *arg)
 {
-	int id=*((int*)arg);
-	if(id==0)
-	{
-		cv::VideoCapture cap(0);
-		if (!cap.isOpened()) {
-			LOG(FATAL) << "can not open camera";
-			cap.release(); 
-			grunning=false;
-			safewakeup();
-			return NULL;
-		}
-		cv::Mat frame;
-		while (grunning){
-			cap >> frame;
-			pthread_mutex_lock(&mutex);  
-			if(gpicindexque.size()<MAXQUEUE){
-				gpicque.push(frame);
-				gpicindexque.push(id);
-				if(gpdetector->InsertImage(frame)){
-					safewakeup(); 
-				}
-			}
-			pthread_mutex_unlock(&mutex);  
-		}
+	cv::VideoCapture cap(0);
+	if (!cap.isOpened()) {
+		LOG(FATAL) << "can not open camera";
 		cap.release(); 
+		grunning=false;
+		safewakeup();
+		return NULL;
 	}
-	else  //just fake , demo , I have no 6 cameras
-	{
-		safesleep(id+3);
-		while (grunning){
-			safesleep(20);  //50 fps
-			pthread_mutex_lock(&mutex);  
-			if(gpicindexque.size()<MAXQUEUE && !gpicindexque.empty()){
-				gpicque.push(gpicque.back().clone());
-				gpicindexque.push(id);
-				if(gpdetector->InsertImage(gpicque.back())){
-					safewakeup(); 
-				}
-			}		
-			pthread_mutex_unlock(&mutex);  
+	cv::Mat frame;
+	while (grunning){
+		cap >> frame;
+		if(gpdetector->InsertImage(frame)){
+			safewakeup(); 
+		}
+		for(int i=0;i<CAMNUM-1;i++){
+			//safesleep(5);  //different time sleep ,  fps from 80~130 ...  in fp16
+			if(gpdetector->InsertImage(frame)){
+				safewakeup(); 
+			}			
 		}
 	}
+	cap.release(); 
 }
 
 void *thr_detector(void *arg)
 {
 	int fc=0;
+	int curbatch;
 	while (grunning){
 		safewait();
 		if(!grunning) break;
-		if(!gpdetector->TryDetect()){
+		if((curbatch=gpdetector->TryDetect())<=0){
 			std::cout << "no data to detect \n" ;
 			continue;
 		}		
-		pthread_mutex_lock(&mutex); 
-		for(int i=0;i<FIXED_BATCH;i++){
-			gpicque.pop();
-			gpicindexque.pop();
-		}
-		pthread_mutex_unlock(&mutex); 
-		
-		vector<vector<Detector::detect_result> > objects(gpdetector->GetCurBatch());
+		vector<Detector::Result> objects(curbatch);
 		gpdetector->Detect(objects);
-		
-		total_frame+=FIXED_BATCH;	
+		total_frame+=curbatch;	
 	}
 }
 
@@ -439,15 +479,6 @@ void *thr_fps(void *arg)
 		safesleep(1000*10);//10s
 		std::cout << "Cur fps=" << total_frame/10.0 << "\n";
 		total_frame = 0;
-	}
-}
-
-void emptyqueue(queue<Blob<Dtype>*>& que)
-{
-	while(!que.empty()){
-		Blob<Dtype>* pdata = que.front();
-		que.pop();
-		delete pdata;
 	}
 }
 
@@ -464,27 +495,20 @@ int main(int argc, char** argv) {
 
 	grunning=true;
 	total_frame = 0;
-	pthread_t nctid[CAMNUM];
+	pthread_t nctid;
 	pthread_t nrtid;
 	pthread_t nttid;
-	pthread_mutex_init(&mutex,NULL);  
 	sem_init(&g_semt, 0, 0);
 	
 	std::cout << "Opencv is using Opencl? " << cv::ocl::useOpenCL() << "\n";
-	cv::ocl::setUseOpenCL(false);
-	std::cout << "Now set to " << cv::ocl::useOpenCL() << "\n";
+	//cv::ocl::setUseOpenCL(false);
+	//std::cout << "Now set to " << cv::ocl::useOpenCL() << "\n";
 	// Initialize the network.
-	Detector detector(model_file, weights_file,FIXED_BATCH);
+	Detector detector(model_file, weights_file,FIXED_BATCH,true);
 	gpdetector = &detector;
 	pthread_create(&nrtid, NULL, thr_detector, (void*)(&detector));
 	pthread_create(&nttid, NULL, thr_fps, NULL);
-	
-	//open input
-	int id[CAMNUM];
-	for(i=0;i<CAMNUM;i++){
-		id[i]=i; //void* --> int must add -fpermissive...
-		pthread_create(&nctid[i], NULL, thr_camera, (void*)&id[i]);
-	}
+	pthread_create(&nctid, NULL, thr_camera, NULL);
 	
 	//wait quit
 	while(true){
@@ -497,15 +521,11 @@ int main(int argc, char** argv) {
 		}
 	}
 	
-	for(i=0;i<CAMNUM;i++)
-		pthread_join(nctid[i],NULL);
+	pthread_join(nctid,NULL);
 	pthread_join(nrtid,NULL);
 	pthread_cancel(nttid);
 	pthread_join(nttid,NULL);
-	pthread_mutex_destroy(&mutex);  
 	sem_destroy(&g_semt);
-	//emptyqueue(gpicque);
-	//emptyqueue(gpicindexque);
 
 	LOG(INFO) << "Done";
 	return 0;

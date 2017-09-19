@@ -9,5 +9,6 @@ include_directories(
     ${ViennaCL_INCLUDE_DIR}
 )
 add_definitions(${Caffe_DEFINITIONS})
+add_compile_options(-std=c++11)
 add_executable(mobilenet_ssd mobilenet_ssd.cpp)
 target_link_libraries(mobilenet_ssd ${Caffe_LIBRARIES})

@@ -6,7 +6,7 @@ TimeStamp=$(date +"%Y%m%d%H%M")
 ModelDir=$ROOT
 BenchDir=$ROOT/${TimeStamp}
 
-Protos=( AlexNet-merged VGG16-merged ResNet101-merged GoogleNetV2-merged GoogleNetV1-merged)
+Protos=( AlexNet-merged VGG16-merged ResNet101-merged GoogleNetV2-merged GoogleNetV1-merged mobilenetssd-merged yolo_fused_deploy fuse_ResNet_50_deploy ssdvgg_fusedeploy)
 
 echo "Create benchmark dir ${BenchDir}"
 mkdir -p ${BenchDir}
