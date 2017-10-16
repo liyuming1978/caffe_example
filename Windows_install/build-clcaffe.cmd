@@ -13,6 +13,7 @@ cmake -G "Visual Studio 14 2015 Win64" .
 cmake --build . --config Release
 cd %~sdp0
 git clone https://github.com/ptillet/isaac.git
+::https://github.com/intel/isaac.git   (if isaac build wrong, please use intel isaac)
 cd isaac
 mkdir build
 cd build
