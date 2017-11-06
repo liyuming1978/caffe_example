@@ -4,7 +4,7 @@
 echo must install openclsdk,python27,git,cmake,vs 2015 for desktop (not for win10)
 echo if download tar from https://github.com/willyd/caffe-builder/releases/ (see WindowsDownloadPrebuiltDependencies.cmake)fail, please copy it to build and delete libraries dir
 
-for /f "delims=" %%t in ('python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"') do set py_path_str=%%t
+for /f "delims=" %%t in ('python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"') do set py_path_str=%%t
 
 cd %~sdp0
 git clone https://github.com/dlfcn-win32/dlfcn-win32
@@ -12,18 +12,27 @@ cd dlfcn-win32
 cmake -G "Visual Studio 14 2015 Win64" .
 cmake --build . --config Release
 cd %~sdp0
-git clone https://github.com/intel/isaac.git
+::git clone https://github.com/ptillet/isaac.git (isaac build wrong, please use intel isaac)
+git clone https://github.com/intel/isaac.git   
 cd isaac
 mkdir build
 cd build
 cmake -G "Visual Studio 14 2015 Win64" ..
 cmake --build . --config Release
+
 cd %~sdp0
 git clone https://github.com/01org/caffe.git
 cd caffe
 git checkout inference-optimize
 git pull
 git clone https://github.com/viennacl/viennacl-dev.git
+
+mkdir build
+cd .\build
+mkdir libraries
+cd ..
+xcopy C:\work\caffe-builder-1.1.0\build_v140_x64\libraries .\build\libraries /s /h /c /y 
+
 set BUILD_PYTHON=1
 set BUILD_PYTHON_LAYER=1
 set USE_INTEL_SPATIAL=1
@@ -31,7 +40,8 @@ set USE_GREENTEA=1
 set USE_ISAAC=1
 set RUN_TESTS=0
 set RUN_INSTALL=1
-scripts\build_win.cmd
+set PYTHON_VERSION=3
+call scripts\build_win.cmd
 
 cd %~sdp0
 for /f  "tokens=1,2 delims==" %%b in (%~sdp0\caffe\build\CMakeCache.txt) do (
@@ -44,55 +54,6 @@ set PYTHON_LIBRARY=%PYTHON_LIBRARY:/=\%
 if not exist "%~sdp0\caffe\build\install\" (
 	echo do not find caffe build
 )else (
-	:: copy lib and include
-	copy /y %~sdp0\dlfcn-win32\Release\dl.dll %~sdp0\caffe\build\install\bin
-	copy /y %~sdp0\isaac\build\lib\Release\isaac.dll %~sdp0\caffe\build\install\bin
-	copy /y %~sdp0\dlfcn-win32\Release\dl.dll %~sdp0\caffe\build\install\python\caffe
-	copy /y %~sdp0\isaac\build\lib\Release\isaac.dll %~sdp0\caffe\build\install\python\caffe
-
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_python-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_system-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_thread-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_filesystem-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_regex-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_chrono-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_date_time-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_atomic-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\glog.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\gflags.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\libprotobuf.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\caffehdf5_hl.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\caffehdf5.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\caffezlib.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\lmdb.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\leveldb.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\snappy_static.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\libopenblas.dll.a %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\x64\vc14\lib\opencv_highgui310.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\x64\vc14\lib\opencv_videoio310.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\x64\vc14\lib\opencv_imgcodecs310.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\x64\vc14\lib\opencv_imgproc310.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\x64\vc14\lib\opencv_core310.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\isaac\build\lib\Release\isaac.lib %~sdp0\caffe\build\install\lib
-
-	copy /y %OPENCL_LIBRARIES% %~sdp0\caffe\build\install\lib
-	copy /y %PYTHON_LIBRARY% %~sdp0\caffe\build\install\lib
-
-	xcopy %~sdp0\caffe\build\libraries\include %~sdp0\caffe\build\install\include /s /h /c /y 
-	move /y %~sdp0\caffe\build\install\include\boost-1_61\boost %~sdp0\caffe\build\install\include\boost 
-	mkdir %~sdp0\caffe\build\install\include\viennacl
-	xcopy %~sdp0\caffe\viennacl-dev\viennacl %~sdp0\caffe\build\install\include\viennacl /s /h /c /y 
-	mkdir  %~sdp0\caffe\build\install\include\CL
-	xcopy %~sdp0\caffe\viennacl-dev\CL %~sdp0\caffe\build\install\include\CL /s /h /c /y 
-	mkdir  %~sdp0\caffe\build\install\include\3rdparty
-	xcopy %~sdp0\caffe\include\3rdparty %~sdp0\caffe\build\install\include\3rdparty /s /h /c /y 
-
-	:: install python
-	cd %py_path_str%\..\..\Scripts
-	pip install protobuf -i https://pypi.tuna.tsinghua.edu.cn/simple
-	echo ###############################################
-	echo copy caffe\build\install\python\caffe to  %py_path_str%\caffe
-	cd %py_path_str%
-	mkdir caffe
-	xcopy %~sdp0\caffe\build\install\python\caffe .\caffe /s /h /c /y 
+	echo "build finish"
 )
+
