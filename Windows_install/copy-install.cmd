@@ -11,6 +11,7 @@ for /f  "tokens=1,2 delims==" %%b in (%~sdp0\caffe\build\CMakeCache.txt) do (
 	if "%%b"=="OPENCL_LIBRARIES:FILEPATH" set OPENCL_LIBRARIES=%%c
 	if "%%b"=="PYTHON_LIBRARY:FILEPATH" set PYTHON_LIBRARY=%%c
 )
+
 set OPENCL_LIBRARIES=%OPENCL_LIBRARIES:/=\%
 set PYTHON_LIBRARY=%PYTHON_LIBRARY:/=\%
 

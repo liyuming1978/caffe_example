@@ -27,12 +27,6 @@ git checkout inference-optimize
 git pull
 git clone https://github.com/viennacl/viennacl-dev.git
 
-mkdir build
-cd .\build
-mkdir libraries
-cd ..
-xcopy C:\work\caffe-builder-1.1.0\build_v140_x64\libraries .\build\libraries /s /h /c /y 
-
 set BUILD_PYTHON=1
 set BUILD_PYTHON_LAYER=1
 set USE_INTEL_SPATIAL=1
