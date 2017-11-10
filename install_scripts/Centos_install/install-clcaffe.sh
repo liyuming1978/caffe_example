@@ -4,7 +4,7 @@
 sudo yum install -y epel-release
 sudo yum makecache
 sudo yum install -y protobuf-devel leveldb-devel snappy-devel opencv-devel hdf5-devel protobuf-compiler boost-devel
-sudo yum install -y gflags-devel glog-devel lmdb-devel  libstdc++ git cmake vim
+sudo yum install -y gflags-devel glog-devel lmdb-devel  libstdc++ git vim
 sudo yum groupinstall -y 'Development Tools'
 sudo yum install -y ocl-icd-devel opencl-headers
 
@@ -21,6 +21,20 @@ sudo yum install -y ocl-icd-devel opencl-headers
 sudo rpm -ivh atlas-3.8.4-2.el6.x86_64.rpm
 sudo rpm -ivh atlas-devel-3.8.4-2.el6.x86_64.rpm
 
+##upgrade cmake
+mkdir -p $HOME/code
+cd $HOME/code
+mkdir -p cmake
+wget https://cmake.org/files/v3.6/cmake-3.6.2.tar.gz    
+tar xvf cmake-3.6.2.tar.gz && cd cmake-3.6.2/
+./bootstrap
+gmake
+sudo gmake install
+
+#copy opencv cmake
+sudo cp /usr/lib64/cmake/OpenCV/OpenCVConfig.cmake /usr/lib64/cmake/OpenCV/OpenCVModules.cmake
+
+#clean and build
 rm -rf $HOME/code/caffe
 rm -rf $HOME/code/viennacl-dev
 rm -rf $HOME/code/isaac
