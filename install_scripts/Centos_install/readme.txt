@@ -1,0 +1,3 @@
+1. please download mediasdk-studio , and use the right centos version 
+2. after install centos , do not yum update!!!, please install mediasdk-studio firstly with the install_scripts, it will also install opencl-driver
+3. if not , you must install all of thest by compiling kernels...
