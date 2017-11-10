@@ -1,0 +1,3 @@
+1. please set cache path (setcachepatch.txt)
+2. nuget package has provided in baidu net driver
+3. ...
