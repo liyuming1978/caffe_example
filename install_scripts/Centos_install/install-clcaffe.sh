@@ -24,7 +24,6 @@ sudo rpm -ivh atlas-devel-3.8.4-2.el6.x86_64.rpm
 ##upgrade cmake
 mkdir -p $HOME/code
 cd $HOME/code
-mkdir -p cmake
 wget https://cmake.org/files/v3.6/cmake-3.6.2.tar.gz    
 tar xvf cmake-3.6.2.tar.gz && cd cmake-3.6.2/
 ./bootstrap
@@ -48,7 +47,7 @@ cmake -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=$HOME/loca
 make -j4
 make install
 cd $HOME/code
-git clone https://github.com/intel/isaac
+git clone https://github.com/intel/isaac.git
 cd isaac
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=$HOME/local .. && make -j4
