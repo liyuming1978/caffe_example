@@ -60,4 +60,4 @@ cd clpeak
 mkdir build && cd build
 cmake ..
 make -j4
-./build/clpeak
+./clpeak
