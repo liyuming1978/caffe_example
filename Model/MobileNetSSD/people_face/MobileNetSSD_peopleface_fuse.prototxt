@@ -1009,7 +1009,7 @@ layer {
   }
 }
 layer {
-  name: "conv11_mbox_conf"
+  name: "conv11_mbox_conf_new"
   type: "Convolution"
   bottom: "conv11"
   top: "conv11_mbox_conf"
@@ -1022,7 +1022,7 @@ layer {
     decay_mult: 0.0
   }
   convolution_param {
-    num_output: 63
+    num_output: 9
     kernel_size: 1
     weight_filler {
       type: "msra"
@@ -1119,7 +1119,7 @@ layer {
   }
 }
 layer {
-  name: "conv13_mbox_conf"
+  name: "conv13_mbox_conf_new"
   type: "Convolution"
   bottom: "conv13"
   top: "conv13_mbox_conf"
@@ -1132,7 +1132,7 @@ layer {
     decay_mult: 0.0
   }
   convolution_param {
-    num_output: 126
+    num_output: 18
     kernel_size: 1
     weight_filler {
       type: "msra"
@@ -1231,7 +1231,7 @@ layer {
   }
 }
 layer {
-  name: "conv14_2_mbox_conf"
+  name: "conv14_2_mbox_conf_new"
   type: "Convolution"
   bottom: "conv14_2"
   top: "conv14_2_mbox_conf"
@@ -1244,7 +1244,7 @@ layer {
     decay_mult: 0.0
   }
   convolution_param {
-    num_output: 126
+    num_output: 18
     kernel_size: 1
     weight_filler {
       type: "msra"
@@ -1343,7 +1343,7 @@ layer {
   }
 }
 layer {
-  name: "conv15_2_mbox_conf"
+  name: "conv15_2_mbox_conf_new"
   type: "Convolution"
   bottom: "conv15_2"
   top: "conv15_2_mbox_conf"
@@ -1356,7 +1356,7 @@ layer {
     decay_mult: 0.0
   }
   convolution_param {
-    num_output: 126
+    num_output: 18
     kernel_size: 1
     weight_filler {
       type: "msra"
@@ -1455,7 +1455,7 @@ layer {
   }
 }
 layer {
-  name: "conv16_2_mbox_conf"
+  name: "conv16_2_mbox_conf_new"
   type: "Convolution"
   bottom: "conv16_2"
   top: "conv16_2_mbox_conf"
@@ -1468,7 +1468,7 @@ layer {
     decay_mult: 0.0
   }
   convolution_param {
-    num_output: 126
+    num_output: 18
     kernel_size: 1
     weight_filler {
       type: "msra"
@@ -1567,7 +1567,7 @@ layer {
   }
 }
 layer {
-  name: "conv17_2_mbox_conf"
+  name: "conv17_2_mbox_conf_new"
   type: "Convolution"
   bottom: "conv17_2"
   top: "conv17_2_mbox_conf"
@@ -1580,7 +1580,7 @@ layer {
     decay_mult: 0.0
   }
   convolution_param {
-    num_output: 126
+    num_output: 18
     kernel_size: 1
     weight_filler {
       type: "msra"
@@ -1683,7 +1683,7 @@ layer {
     shape {
       dim: 0
       dim: -1
-      dim: 21
+      dim: 3
     }
   }
 }
@@ -1716,7 +1716,7 @@ layer {
     phase: TEST
   }
   detection_output_param {
-    num_classes: 21
+    num_classes: 3
     share_location: true
     background_label_id: 0
     nms_param {
