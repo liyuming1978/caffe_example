@@ -4,22 +4,22 @@
 sudo yum install -y epel-release
 sudo yum makecache
 sudo yum install -y protobuf-devel leveldb-devel snappy-devel opencv-devel hdf5-devel protobuf-compiler boost-devel
-sudo yum install -y gflags-devel glog-devel lmdb-devel  libstdc++ git vim
+sudo yum install -y gflags-devel glog-devel lmdb-devel  libstdc++ git vim gcc gcc-c++ numpy python-devel scipy
 sudo yum groupinstall -y 'Development Tools'
 sudo yum install -y ocl-icd-devel opencl-headers
 
 #liyuming mark: numpy will update atlas to 3.10, it will make cmake error for caffe,
 #so if you want python, you must install cent6 package for numpy ... by yourself
-#sudo yum install -y python-pip python-devel
-#sudo pip install --upgrade pip -i http://mirrors.aliyun.com/pypi/simple
-#sudo pip install --upgrade virtualenv -i http://mirrors.aliyun.com/pypi/simple
-#sudo pip install numpy -i http://mirrors.aliyun.com/pypi/simple
-#sudo pip install scikit-image -i http://mirrors.aliyun.com/pypi/simple
-#sudo pip install protobuf -i http://mirrors.aliyun.com/pypi/simple
+sudo yum install -y python-pip python-devel
+sudo pip install --upgrade pip -i http://mirrors.aliyun.com/pypi/simple
+sudo pip install numpy -i http://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com
+sudo pip install scikit-image -i http://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com
+sudo pip install protobuf -i http://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com
+#suggest install opencv by build yourself
 
 ##atlas must use 3.8.4##
-sudo rpm -ivh atlas-3.8.4-2.el6.x86_64.rpm
-sudo rpm -ivh atlas-devel-3.8.4-2.el6.x86_64.rpm
+#sudo rpm -ivh atlas-3.8.4-2.el6.x86_64.rpm
+#sudo rpm -ivh atlas-devel-3.8.4-2.el6.x86_64.rpm
 
 ##upgrade cmake
 mkdir -p $HOME/code
@@ -60,8 +60,9 @@ git clone https://github.com/01org/caffe.git
 cd caffe
 git checkout inference-optimize
 mkdir build && cd build
+CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )"
+export Atlas_ROOT_DIR=$CURDIR/atlas_384
 export ISAAC_HOME=$HOME/local
-export Atlas_ROOT_DIR=/usr/lib64/atlas
 
 cmake .. -DUSE_GREENTEA=ON -DUSE_CUDA=OFF -DUSE_INTEL_SPATIAL=ON -DBUILD_docs=0 -DUSE_ISAAC=ON -DViennaCL_INCLUDE_DIR=$HOME/local/include -DOPENCL_LIBRARIES=/opt/intel/opencl/libOpenCL.so -DOPENCL_INCLUDE_DIRS=/opt/intel/opencl/include
 
