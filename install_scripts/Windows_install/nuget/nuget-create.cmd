@@ -12,4 +12,4 @@ cd %~sdp0
 xcopy %~sdp0\..\caffe\build\install\include %~sdp0\include /s /h /c /y 
 xcopy %~sdp0\..\caffe\build\install\lib %~sdp0\lib\Release /s /h /c /y 
 
-nuget.ext pack clCaffe_Package.nuspec
+nuget.exe pack clCaffe_Package.nuspec
