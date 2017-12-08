@@ -4,7 +4,7 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(PlatformToolset)' == 'v140' And '$(Platform)' == 'x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' And '$(PlatformToolset)' == 'v140' And '$(Platform)' == 'x64'">
     <ClCompile>
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
