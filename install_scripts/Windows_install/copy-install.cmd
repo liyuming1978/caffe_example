@@ -63,7 +63,7 @@ if not exist "%~sdp0\caffe\build\install\" (
 	mkdir  %~sdp0\caffe\build\install\include\CL
 	xcopy %~sdp0\caffe\viennacl-dev\CL %~sdp0\caffe\build\install\include\CL /s /h /c /y 
 	mkdir  %~sdp0\caffe\build\install\include\3rdparty
-	xcopy %~sdp0\caffe\include\3rdparty %~sdp0\caffe\build\install\include\3rdparty /s /h /c /y
+	xcopy %~sdp0\caffe\include\caffe\3rdparty %~sdp0\caffe\build\install\include\3rdparty /s /h /c /y
 	
 
 	:: install python
