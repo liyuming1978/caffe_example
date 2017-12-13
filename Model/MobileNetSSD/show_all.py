@@ -8,14 +8,14 @@ import sys
 
 print(cv2.__version__)
 
-caffe_root = '/home/lym/work/code/caffe/'            #you must change it here!!!!!!!!!!!!
+caffe_root = '/home/lym/code/caffe/'            #you must change it here!!!!!!!!!!!!
 sys.path.insert(0, caffe_root + 'python')  
 import caffe
 caffe.set_device(0)
 caffe.set_mode_gpu()
 net_file= os.path.split(os.path.realpath(__file__))[0]+'/MobileNetSSD_deploy_fuse.prototxt'  
 caffe_model= os.path.split(os.path.realpath(__file__))[0]+'/MobileNetSSD_deploy_fuse.caffemodel'  
-net = caffe.Net(net_file,caffe_model,caffe.TEST)  
+net = caffe.Net(net_file,caffe_model,caffe.TEST)
 
 #person is 15
 CLASSES = ('background',
@@ -66,12 +66,11 @@ camera = cv2.VideoCapture(0)
 time.sleep(0.25)
 
 while True:
-    (grabbed, frame) = camera.read()
+    (grabbed, frame) = camera.read() 
     if not grabbed:
         break
-    
     detect(frame)
-        
+
     key = cv2.waitKey(1) & 0xFF
  
     # 如果q键被按下，跳出循环
