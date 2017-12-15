@@ -1,0 +1,47 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Platform)'=='x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' And '$(PlatformToolset)' == 'v120' And '$(Platform)' == 'x64'">
+    <ClCompile>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>		
+			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>			
+			<RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;CAFFE_VERSION=1.0.0-rc5;BOOST_ALL_NO_LIB;BOOST_NO_CXX11_TEMPLATE_ALIASES;USE_HDF5;USE_LMDB;USE_LEVELDB;USE_GREENTEA;VIENNACL_WITH_OPENCL;USE_INTEL_SPATIAL;USE_CLBLAS;HAS_HALF_SUPPORT;USE_OPENCV;CMAKE_WINDOWS_BUILD;GLOG_NO_ABBREVIATED_SEVERITIES;GOOGLE_GLOG_DLL_DECL=__declspec(dllimport);GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS=__declspec(dllimport);H5_BUILT_AS_DYNAMIC_LIB=1;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;CAFFE_VERSION=1.0.0-rc5;BOOST_ALL_NO_LIB;BOOST_NO_CXX11_TEMPLATE_ALIASES;USE_HDF5;USE_LMDB;USE_LEVELDB;USE_GREENTEA;VIENNACL_WITH_OPENCL;USE_INTEL_SPATIAL;USE_CLBLAS;HAS_HALF_SUPPORT;USE_OPENCV;CMAKE_WINDOWS_BUILD;GLOG_NO_ABBREVIATED_SEVERITIES;GOOGLE_GLOG_DLL_DECL=__declspec(dllimport);GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS=__declspec(dllimport);H5_BUILT_AS_DYNAMIC_LIB=1;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>		
+    <Link>
+      <AdditionalLibraryDirectories>$(MSBuildThisFileDirectory)..\..\lib\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+				caffe.lib;proto.lib;
+				ntdll.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;
+				ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;
+				boost_python-vc120-mt-1_61.lib;boost_system-vc120-mt-1_61.lib;
+				boost_thread-vc120-mt-1_61.lib;boost_filesystem-vc120-mt-1_61.lib;
+				boost_regex-vc120-mt-1_61.lib;boost_chrono-vc120-mt-1_61.lib;
+				boost_date_time-vc120-mt-1_61.lib;boost_atomic-vc120-mt-1_61.lib;
+				glog.lib;gflags.lib;shlwapi.lib;libprotobuf.lib;
+				caffehdf5_hl.lib;caffehdf5.lib;caffezlib.lib;
+				lmdb.lib;leveldb.lib;snappy_static.lib;OpenCL.lib;
+				isaac.lib;opencv_highgui310.lib;
+				opencv_videoio310.lib;opencv_imgcodecs310.lib;
+				opencv_imgproc310.lib;opencv_core310.lib;
+				libopenblas.dll.a;python27.lib;
+				%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+
+    <PostBuildEvent>
+      <Message>Copying caffe Runtime</Message>
+      <Command>copy /y "$(MSBuildThisFileDirectory)\..\..\lib\Release\*.dll" "$(TargetDir)"</Command>
+    </PostBuildEvent>	
+  </ItemDefinitionGroup>
+
+</Project>

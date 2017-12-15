@@ -14,3 +14,4 @@ xcopy %~sdp0\..\caffe\build\install\lib %~sdp0\lib\Release /s /h /c /y
 xcopy %~sdp0\..\caffe\build\install\bin\*.dll %~sdp0\lib\Release /s /h /c /y 
 
 nuget.exe pack clCaffe_Package.nuspec
+pause
