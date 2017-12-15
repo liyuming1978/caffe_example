@@ -76,4 +76,5 @@ if not exist "%~sdp0\caffe\build\install\" (
 	::xcopy %~sdp0\caffe\build\install\python\caffe .\caffe /s /h /c /y 
 	echo "copy done"
 )
+pause
 

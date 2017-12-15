@@ -50,4 +50,5 @@ if not exist "%~sdp0\caffe\build\install\" (
 )else (
 	echo "build finish"
 )
+pause
 
