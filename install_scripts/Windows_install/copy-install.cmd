@@ -28,14 +28,14 @@ if not exist "%~sdp0\caffe\build\install\" (
 	copy /y %~sdp0\dlfcn-win32\Release\dl.dll %~sdp0\caffe\build\tools\Release
 	copy /y %~sdp0\isaac\build\lib\Release\isaac.dll %~sdp0\caffe\build\tools\Release
 
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_python-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_system-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_thread-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_filesystem-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_regex-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_chrono-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_date_time-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
-	copy /y %~sdp0\caffe\build\libraries\lib\boost_atomic-*-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_python-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_system-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_thread-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_filesystem-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_regex-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_chrono-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_date_time-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
+	copy /y %~sdp0\caffe\build\libraries\lib\boost_atomic-vc140-mt-1_61.lib %~sdp0\caffe\build\install\lib
 	copy /y %~sdp0\caffe\build\libraries\lib\glog.lib %~sdp0\caffe\build\install\lib
 	copy /y %~sdp0\caffe\build\libraries\lib\gflags.lib %~sdp0\caffe\build\install\lib
 	copy /y %~sdp0\caffe\build\libraries\lib\libprotobuf.lib %~sdp0\caffe\build\install\lib
@@ -53,8 +53,8 @@ if not exist "%~sdp0\caffe\build\install\" (
 	copy /y %~sdp0\caffe\build\libraries\x64\vc14\lib\opencv_core310.lib %~sdp0\caffe\build\install\lib
 	copy /y %~sdp0\isaac\build\lib\Release\isaac.lib %~sdp0\caffe\build\install\lib
 
-	copy /y %OPENCL_LIBRARIES% %~sdp0\caffe\build\install\lib
-	copy /y %PYTHON_LIBRARY% %~sdp0\caffe\build\install\lib
+	copy /y "%OPENCL_LIBRARIES%" %~sdp0\caffe\build\install\lib
+	copy /y "%PYTHON_LIBRARY%" %~sdp0\caffe\build\install\lib
 
 	xcopy %~sdp0\caffe\build\libraries\include %~sdp0\caffe\build\install\include /s /h /c /y 
 	move /y %~sdp0\caffe\build\install\include\boost-1_61\boost %~sdp0\caffe\build\install\include\boost 
