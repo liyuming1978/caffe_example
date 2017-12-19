@@ -34,7 +34,7 @@ set USE_GREENTEA=1
 set USE_ISAAC=1
 set RUN_TESTS=0
 set RUN_INSTALL=1
-::set MSVC_VERSION=12   //if using vs2013
+::set MSVC_VERSION=12   //do not set it , can not support vs2013
 ::set PYTHON_VERSION=3  //if using python3.5 , vs2013 only python2.7
 call scripts\build_win.cmd
 
