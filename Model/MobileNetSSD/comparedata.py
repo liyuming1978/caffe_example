@@ -70,4 +70,4 @@ def detect(camimg):
         fd.close()
         
 ##################################################################################             
-detect(cv2.imread('test.jpg'))
+detect(cv2.imread('test.bmp'))
