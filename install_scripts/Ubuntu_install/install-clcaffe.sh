@@ -52,6 +52,7 @@ then # if not exist
 	echo "" >> $HOME/.bashrc
 	echo "export VIENNACL_CACHE_PATH=${HOME}/.cache/clcaffe_cache/viennacl/" >> $HOME/.bashrc
 fi
+rm -rf ${HOME}/.cache/clcaffe_cache/
 
 ####install clpeak############################
 cd $HOME/code
