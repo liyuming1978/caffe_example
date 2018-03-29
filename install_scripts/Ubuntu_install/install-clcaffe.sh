@@ -37,6 +37,7 @@ cd $HOME/code
 git clone https://github.com/01org/caffe.git
 cd caffe
 git checkout inference-optimize
+git checkout 2a73199d862b63b41497098fa926f0e35ab41fc2
 mkdir build && cd build
 export ISAAC_HOME=$HOME/local
 
